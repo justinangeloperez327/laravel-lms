@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('author');
             $table->text('notes')->nullable();
             $table->string('status')->default('pending'); // pending, approved, rejected
+            $table->softDeletes();
             $table->timestamps();
         });
     }

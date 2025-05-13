@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('status')->default('borrowed'); // borrowed, returned, overdue
             $table->foreignId('user_id')->constrained();
             $table->foreignId('book_id')->constrained();
+            $table->softDeletes();
             $table->timestamps();
         });
     }

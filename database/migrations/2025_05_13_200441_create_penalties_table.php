@@ -19,6 +19,7 @@ return new class extends Migration
             $table->date('penalty_date');
             $table->foreignId('user_id')->constrained();
             $table->foreignId('borrowing_id')->constrained();
+            $table->softDeletes();
             $table->timestamps();
         });
     }
