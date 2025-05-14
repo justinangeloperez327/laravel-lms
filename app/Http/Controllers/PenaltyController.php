@@ -15,7 +15,8 @@ final class PenaltyController extends Controller
      */
     public function index()
     {
-        //
+        $penalties = Penalty::with(['user', 'borrowing'])->paginate(10);
+        return inertia('penalties/index', compact('penalties'));
     }
 
     /**
@@ -23,7 +24,9 @@ final class PenaltyController extends Controller
      */
     public function create()
     {
-        //
+        $users = \App\Models\User::all();
+        $borrowings = \App\Models\Borrowing::all();
+        return inertia('penalties/create', compact('users', 'borrowings'));
     }
 
     /**
@@ -31,7 +34,12 @@ final class PenaltyController extends Controller
      */
     public function store(StorePenaltyRequest $request)
     {
-        //
+        $validated = $request->validated();
+
+        $penalty = Penalty::create($validated);
+
+        return redirect()->route('penalties.show', $penalty)
+            ->with('success', 'Penalty created successfully.');
     }
 
     /**
@@ -39,7 +47,8 @@ final class PenaltyController extends Controller
      */
     public function show(Penalty $penalty)
     {
-        //
+        $penalty->load(['user', 'borrowing']);
+        return inertia('penalties/show', compact('penalty'));
     }
 
     /**
@@ -47,7 +56,9 @@ final class PenaltyController extends Controller
      */
     public function edit(Penalty $penalty)
     {
-        //
+        $users = \App\Models\User::all();
+        $borrowings = \App\Models\Borrowing::all();
+        return inertia('penalties/edit', compact('penalty', 'users', 'borrowings'));
     }
 
     /**
@@ -55,7 +66,12 @@ final class PenaltyController extends Controller
      */
     public function update(UpdatePenaltyRequest $request, Penalty $penalty)
     {
-        //
+        $validated = $request->validated();
+
+        $penalty->update($validated);
+
+        return redirect()->route('penalties.show', $penalty)
+            ->with('success', 'Penalty updated successfully.');
     }
 
     /**
@@ -63,6 +79,9 @@ final class PenaltyController extends Controller
      */
     public function destroy(Penalty $penalty)
     {
-        //
+        $penalty->delete();
+
+        return redirect()->route('penalties.index')
+            ->with('success', 'Penalty deleted successfully.');
     }
 }

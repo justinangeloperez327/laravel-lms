@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreBookRequest;
 use App\Http\Requests\UpdateBookRequest;
 use App\Models\Book;
+use Inertia\Inertia;
 
 final class BookController extends Controller
 {
@@ -15,7 +16,8 @@ final class BookController extends Controller
      */
     public function index()
     {
-        //
+        $books = Book::with('category')->paginate(10);
+        return inertia('books/index', compact('books'));
     }
 
     /**
@@ -23,7 +25,8 @@ final class BookController extends Controller
      */
     public function create()
     {
-        //
+        $categories = \App\Models\Category::all();
+        return inertia('books/create', compact('categories'));
     }
 
     /**
@@ -31,7 +34,18 @@ final class BookController extends Controller
      */
     public function store(StoreBookRequest $request)
     {
-        //
+        $validated = $request->validated();
+
+        if ($request->hasFile('cover_image')) {
+            $validated['cover_image'] = $request->file('cover_image')->store('book-covers', 'public');
+        }
+
+        $validated['available_copies'] = $validated['total_copies'];
+
+        $book = Book::create($validated);
+
+        return redirect()->route('books.show', $book)
+            ->with('success', 'Book created successfully.');
     }
 
     /**
@@ -39,7 +53,8 @@ final class BookController extends Controller
      */
     public function show(Book $book)
     {
-        //
+        $book->load('category');
+        return inertia('books/show', compact('book'));
     }
 
     /**
@@ -47,7 +62,8 @@ final class BookController extends Controller
      */
     public function edit(Book $book)
     {
-        //
+        $categories = \App\Models\Category::all();
+        return inertia('books/edit', compact('book', 'categories'));
     }
 
     /**
@@ -55,7 +71,26 @@ final class BookController extends Controller
      */
     public function update(UpdateBookRequest $request, Book $book)
     {
-        //
+        $validated = $request->validated();
+
+        if ($request->hasFile('cover_image')) {
+            // Delete old image if it exists
+            if ($book->cover_image) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($book->cover_image);
+            }
+            $validated['cover_image'] = $request->file('cover_image')->store('book-covers', 'public');
+        }
+
+        // If total_copies is being updated, adjust available_copies accordingly
+        if (isset($validated['total_copies']) && $validated['total_copies'] != $book->total_copies) {
+            $diff = $validated['total_copies'] - $book->total_copies;
+            $validated['available_copies'] = $book->available_copies + $diff;
+        }
+
+        $book->update($validated);
+
+        return redirect()->route('books.show', $book)
+            ->with('success', 'Book updated successfully.');
     }
 
     /**
@@ -63,6 +98,16 @@ final class BookController extends Controller
      */
     public function destroy(Book $book)
     {
-        //
+        // Check if book can be deleted (no active borrowings)
+        $activeBorrowings = $book->borrowings()->whereIn('status', ['borrowed', 'overdue'])->count();
+
+        if ($activeBorrowings > 0) {
+            return back()->with('error', 'Cannot delete book with active borrowings.');
+        }
+
+        $book->delete();
+
+        return redirect()->route('books.index')
+            ->with('success', 'Book deleted successfully.');
     }
 }

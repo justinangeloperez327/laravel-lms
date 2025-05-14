@@ -15,7 +15,8 @@ final class CategoryController extends Controller
      */
     public function index()
     {
-        //
+        $categories = Category::paginate(10);
+        return inertia('categories/index', compact('categories'));
     }
 
     /**
@@ -23,7 +24,7 @@ final class CategoryController extends Controller
      */
     public function create()
     {
-        //
+        return inertia('categories/create');
     }
 
     /**
@@ -31,7 +32,12 @@ final class CategoryController extends Controller
      */
     public function store(StoreCategoryRequest $request)
     {
-        //
+        $validated = $request->validated();
+
+        $category = Category::create($validated);
+
+        return redirect()->route('categories.show', $category)
+            ->with('success', 'Category created successfully.');
     }
 
     /**
@@ -39,7 +45,7 @@ final class CategoryController extends Controller
      */
     public function show(Category $category)
     {
-        //
+        return inertia('categories/show', compact('category'));
     }
 
     /**
@@ -47,7 +53,7 @@ final class CategoryController extends Controller
      */
     public function edit(Category $category)
     {
-        //
+        return inertia('categories/edit', compact('category'));
     }
 
     /**
@@ -55,7 +61,12 @@ final class CategoryController extends Controller
      */
     public function update(UpdateCategoryRequest $request, Category $category)
     {
-        //
+        $validated = $request->validated();
+
+        $category->update($validated);
+
+        return redirect()->route('categories.show', $category)
+            ->with('success', 'Category updated successfully.');
     }
 
     /**
@@ -63,6 +74,9 @@ final class CategoryController extends Controller
      */
     public function destroy(Category $category)
     {
-        //
+        $category->delete();
+
+        return redirect()->route('categories.index')
+            ->with('success', 'Category deleted successfully.');
     }
 }

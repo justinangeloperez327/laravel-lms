@@ -14,7 +14,9 @@ final class RoleController extends Controller
      */
     public function index()
     {
-        //
+        $roles = Role::paginate(10);
+
+        return inertia('roles/index', compact('roles'));
     }
 
     /**
@@ -22,7 +24,7 @@ final class RoleController extends Controller
      */
     public function create()
     {
-        //
+        return inertia('roles/create');
     }
 
     /**
@@ -30,7 +32,14 @@ final class RoleController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'name' => 'required|string|unique:roles,name|max:255',
+        ]);
+
+        $role = Role::create($validated);
+
+        return redirect()->route('roles.show', $role)
+            ->with('success', 'Role created successfully.');
     }
 
     /**
@@ -38,7 +47,7 @@ final class RoleController extends Controller
      */
     public function show(Role $role)
     {
-        //
+        return inertia('roles/show', compact('role'));
     }
 
     /**
@@ -46,7 +55,7 @@ final class RoleController extends Controller
      */
     public function edit(Role $role)
     {
-        //
+        return inertia('roles/edit', compact('role'));
     }
 
     /**
@@ -54,7 +63,14 @@ final class RoleController extends Controller
      */
     public function update(Request $request, Role $role)
     {
-        //
+        $validated = $request->validate([
+            'name' => 'required|string|unique:roles,name,' . $role->id . '|max:255',
+        ]);
+
+        $role->update($validated);
+
+        return redirect()->route('roles.show', $role)
+            ->with('success', 'Role updated successfully.');
     }
 
     /**
@@ -62,6 +78,9 @@ final class RoleController extends Controller
      */
     public function destroy(Role $role)
     {
-        //
+        $role->delete();
+
+        return redirect()->route('roles.index')
+            ->with('success', 'Role deleted successfully.');
     }
 }
